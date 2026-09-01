@@ -1,11 +1,14 @@
 use std::io;
 
-use crate::theme::{Theme, discover_themes, find_theme_index};
-use crate::ui::home::draw_home;
-use crate::input::home::handle_home_input;
-
-use crossterm::event::{self, Event, KeyEvent};
-use ratatui::{Terminal, backend::CrosstermBackend, widgets::ListState};
+use crate::theme::{Theme, discover_themes};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use ratatui::{
+    Frame, Terminal,
+    backend::CrosstermBackend,
+    layout::{Constraint, Direction, Layout, Padding},
+    style::{Style},
+    widgets::{Block, List, ListItem},
+};
 
 struct App {
     should_quit: bool,
@@ -13,6 +16,11 @@ struct App {
 }
 
 impl App {
+    fn theme(&self) -> &Theme {
+        self.themes
+            .first()
+            .expect("at least one theme should always exist")
+    }
 }
 
 fn quit(app: &mut App) {
@@ -35,12 +43,10 @@ fn run(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> io::Result<()> 
     };
 
     loop {
-        terminal.draw(|frame| draw_home(frame, &mut app));
+        terminal.draw(|frame| draw_home(frame, &mut app))?;
 
         if let Event::Key(key) = event::read()? {
-            app.last_key_event = Some(key);
-
-            handle_home_input(&mut app, key)
+            handle_home_input(&mut app, key);
         }
 
         if app.should_quit {
@@ -59,76 +65,118 @@ fn handle_home_input(app: &mut App, key: KeyEvent) {
     } else {
         match key.code {
             KeyCode::Esc => quit(app),
-
             _ => {}
         }
     }
 }
 
 fn draw_home(frame: &mut Frame, app: &mut App) {
-    let theme = app.theme().clone();
+    let theme = app.theme();
     let full_area = frame.area();
 
     frame.render_widget(
         Block::default().style(
             Style::default()
-                .bg(theme.colors.background)
+                .bg(theme.colors.base)
                 .fg(theme.colors.text),
         ),
         full_area,
     );
 
     let outer_block = Block::default().padding(Padding::proportional(1));
-
     let inner_area = outer_block.inner(full_area);
-
-    let constraints = vec![
-        Constraint::Fill(1),
-    ];
 
     let vertical = Layout::default()
         .direction(Direction::Vertical)
-        .constraints(constraints)
+        .constraints([
+            Constraint::Length(1),
+            Constraint::Fill(1),
+        ])
         .split(inner_area);
 
-    let text = Paragraph::new(" [↑↓]  [^s]  [^l]").style(Style::default().fg(theme.colors.accent));
+    let header = ratatui::widgets::Paragraph::new(
+        " [↑↓] Navigate   [^s] Select   [^l] Load   [Esc] Quit",
+    )
+    .style(Style::default().fg(theme.colors.accent));
 
-    frame.render_widget(text, vertical[0]);
+    frame.render_widget(header, vertical[0]);
+
+    let items = theme_color_items(theme);
+
+    let list = List::new(items)
+        .block(Block::default())
+        .style(
+            Style::default()
+                .bg(theme.colors.base)
+                .fg(theme.colors.text),
+        );
+
+    frame.render_widget(list, vertical[1]);
 }
 
+const separator = color_item("------", theme.colors.border);
 
+fn theme_color_items(theme: &Theme) -> Vec<ListItem<'static>> {
+    vec![
+        color_item("text", theme.colors.text),
+        color_item("base", theme.colors.base),
 
-// "█ text" , "#CDD6F4";
-// "█ base" , "#1E1E2E";
-// "█ surface_0" , "#313244";
-// "█ surface_1" , "#45475A";
-// "█ muted" , "#6C7086";
-// "█ subtle" , "#585B70";
-// "█ disabled" , "#6C7086";
-// "█ border" , "#6C7086";
-// "█ accent" , "#CBA6F7";
-// "█ accent_2" , "#89B4FA";
-// "█ accent_3" , "#FAB387";
-// "█ accent_4" , "#A6E3A1";
-// "█ accent_5" , "#F5C2E7";
-// "█ success" , "#A6E3A1";
-// "█ warning" , "#F9E2AF";
-// "█ error" , "#F38BA8";
-// "█ info" , "#89DCEB";
-// "█ link" , "#89B4FA";
-// "█ black" , "#1E1E2E"
-// "█ blue" , "#667FA8"
-// "█ green" , "#769C72"
-// "█ cyan" , "#6D9E99"
-// "█ red" , "#B4546A"
-// "█ magenta" , "#9B78B8"
-// "█ brown" , "#B39A68"
-// "█ light_gray" , "#A6ADC8"
-// "█ dark_gray" , "#6C7086"
-// "█ light_blue" , "#89B4FA"
-// "█ light_green" , "#A6E3A1"
-// "█ light_cyan" , "#94E2D5"
-// "█ light_red" , "#F38BA8"
-// "█ light_magenta" , "#CBA6F7"
-// "█ yellow" , "#F9E2AF"
-// "█ white" , "#CDD6F4"
+        separator,
+
+        color_item("surface_0", theme.colors.surface_0),
+        color_item("surface_1", theme.colors.surface_1),
+
+        separator,
+
+        color_item("muted", theme.colors.muted),
+        color_item("subtle", theme.colors.subtle),
+        color_item("disabled", theme.colors.disabled),
+
+        separator,
+
+        color_item("border", theme.colors.border),
+
+        separator,
+
+        color_item("accent", theme.colors.accent),
+        color_item("accent_2", theme.colors.accent_2),
+        color_item("accent_3", theme.colors.accent_3),
+        color_item("accent_4", theme.colors.accent_4),
+        color_item("accent_5", theme.colors.accent_5),
+
+        separator,
+
+        color_item("success", theme.colors.success),
+        color_item("warning", theme.colors.warning),
+        color_item("error", theme.colors.error),
+        color_item("info", theme.colors.info),
+
+        separator,
+
+        color_item("link", theme.colors.link),
+
+        separator,
+
+        color_item("black", theme.colors.black),
+        color_item("blue", theme.colors.blue),
+        color_item("green", theme.colors.green),
+        color_item("cyan", theme.colors.cyan),
+        color_item("red", theme.colors.red),
+        color_item("magenta", theme.colors.magenta),
+        color_item("brown", theme.colors.brown),
+        color_item("light_gray", theme.colors.light_gray),
+        color_item("dark_gray", theme.colors.dark_gray),
+        color_item("light_blue", theme.colors.light_blue),
+        color_item("light_green", theme.colors.light_green),
+        color_item("light_cyan", theme.colors.light_cyan),
+        color_item("light_red", theme.colors.light_red),
+        color_item("light_magenta", theme.colors.light_magenta),
+        color_item("yellow", theme.colors.yellow),
+        color_item("white", theme.colors.white),
+    ]
+}
+
+fn color_item(name: &'static str, color: ratatui::style::Color) -> ListItem<'static> {
+    ListItem::new(format!("█ {name}"))
+        .style(Style::default().fg(color))
+}
