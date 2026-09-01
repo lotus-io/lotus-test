@@ -7,7 +7,10 @@ use ratatui::{
     backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Padding},
+    widgets::{
+        Block, Borders, Clear, List, ListItem, ListState, Padding, Paragraph, Scrollbar,
+        ScrollbarOrientation, ScrollbarState,
+    },
 };
 
 struct App {
@@ -15,15 +18,18 @@ struct App {
     themes: Vec<Theme>,
     current_theme_index: usize,
     status: Option<String>,
-
     show_theme_popup: bool,
     popup_state: ListState,
+    color_list_state: ListState,
 }
 
 impl App {
     fn new(themes: Vec<Theme>) -> Self {
         let mut popup_state = ListState::default();
         popup_state.select(Some(0));
+
+        let mut color_list_state = ListState::default();
+        color_list_state.select(Some(0));
 
         Self {
             should_quit: false,
@@ -32,6 +38,7 @@ impl App {
             status: None,
             show_theme_popup: false,
             popup_state,
+            color_list_state,
         }
     }
 
@@ -53,6 +60,7 @@ impl App {
 
     fn popup_move(&mut self, delta: isize) {
         let len = self.themes.len();
+
         if len == 0 {
             return;
         }
@@ -61,6 +69,19 @@ impl App {
         let next = (current + delta).rem_euclid(len as isize) as usize;
 
         self.popup_state.select(Some(next));
+    }
+
+    fn color_list_move(&mut self, delta: isize) {
+        let len = theme_color_items(self.theme()).len();
+
+        if len == 0 {
+            return;
+        }
+
+        let current = self.color_list_state.selected().unwrap_or(0) as isize;
+        let next = (current + delta).rem_euclid(len as isize) as usize;
+
+        self.color_list_state.select(Some(next));
     }
 
     fn apply_selected_theme(&mut self) {
@@ -126,6 +147,7 @@ fn handle_input(app: &mut App, key: KeyEvent) {
         if let KeyCode::Char(c) = key.code {
             handle_shortcut(app, c);
         }
+
         return;
     }
 
@@ -140,6 +162,12 @@ fn handle_input(app: &mut App, key: KeyEvent) {
     } else {
         match key.code {
             KeyCode::Esc => quit(app),
+            KeyCode::Up | KeyCode::Char('k') => {
+                app.color_list_move(-1);
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                app.color_list_move(1);
+            }
             _ => {}
         }
     }
@@ -150,11 +178,7 @@ fn draw_home(frame: &mut Frame, app: &mut App) {
     let full_area = frame.area();
 
     frame.render_widget(
-        Block::default().style(
-            Style::default()
-                .bg(theme.colors.base)
-                .fg(theme.colors.text),
-        ),
+        Block::default().style(Style::default().bg(theme.colors.base).fg(theme.colors.text)),
         full_area,
     );
 
@@ -172,13 +196,30 @@ fn draw_home(frame: &mut Frame, app: &mut App) {
 
     let items = theme_color_items(&theme);
 
-    let list = List::new(items).block(Block::default()).style(
-        Style::default()
-            .bg(theme.colors.base)
-            .fg(theme.colors.text),
-    );
+    let list = List::new(items.clone())
+        .block(Block::default())
+        .style(Style::default().bg(theme.colors.base).fg(theme.colors.text));
 
-    frame.render_widget(list, vertical[0]);
+    frame.render_stateful_widget(list, vertical[0], &mut app.color_list_state);
+
+    let scrollbar_style = Style::default().fg(theme.colors.subtle);
+
+    let selected = app.color_list_state.selected().unwrap_or(0);
+    let mut scrollbar_state = ScrollbarState::new(items.len()).position(selected);
+
+    frame.render_stateful_widget(
+        Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .thumb_symbol("█")
+            .track_symbol(Some("│"))
+            .begin_symbol(Some("↑"))
+            .end_symbol(Some("↓"))
+            .thumb_style(scrollbar_style)
+            .track_style(scrollbar_style)
+            .begin_style(scrollbar_style)
+            .end_style(scrollbar_style),
+        vertical[0],
+        &mut scrollbar_state,
+    );
 
     let help = Paragraph::new(format!(
         "[↑↓] Navigate  [^s] Themes  [Esc] Quit  (theme: {})",
@@ -203,11 +244,7 @@ fn draw_theme_popup(frame: &mut Frame, app: &mut App, theme: &Theme, area: Rect)
         .title_alignment(Alignment::Center)
         .borders(Borders::ALL)
         .border_style(Style::default().fg(theme.colors.accent))
-        .style(
-            Style::default()
-                .bg(theme.colors.base)
-                .fg(theme.colors.text),
-        );
+        .style(Style::default().bg(theme.colors.base).fg(theme.colors.text));
 
     let items: Vec<ListItem> = app
         .themes
@@ -220,7 +257,7 @@ fn draw_theme_popup(frame: &mut Frame, app: &mut App, theme: &Theme, area: Rect)
                 "  "
             };
 
-            let mut lines = vec![format!("{marker}{}", t.name)];
+            let lines = vec![format!("{marker}{}", t.name)];
 
             ListItem::new(lines.join("\n"))
         })
@@ -238,7 +275,6 @@ fn draw_theme_popup(frame: &mut Frame, app: &mut App, theme: &Theme, area: Rect)
     frame.render_stateful_widget(list, popup_area, &mut app.popup_state);
 }
 
-/// Returns a rect centered within `area`, sized as a percentage of it.
 fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
     let vertical = Layout::default()
         .direction(Direction::Vertical)

@@ -207,11 +207,7 @@ fn toml_theme_parser(raw: &str) -> Result<Theme, toml::de::Error> {
 fn config_dir() -> Option<std::path::PathBuf> {
     let home = std::env::var_os("HOME")?;
 
-    Some(
-        std::path::PathBuf::from(home)
-            .join(".config")
-            .join("lotus"),
-    )
+    Some(std::path::PathBuf::from(home).join(".config").join("lotus"))
 }
 
 fn current_theme_path() -> Option<std::path::PathBuf> {
@@ -220,8 +216,9 @@ fn current_theme_path() -> Option<std::path::PathBuf> {
     Some(
         std::path::PathBuf::from(home)
             .join(".config")
+            // Here the name of your app's config file ↓
             .join(format!("{}", env!("CARGO_PKG_NAME")))
-            .join("current-theme")
+            .join("current-theme"),
     )
 }
 
