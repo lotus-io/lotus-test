@@ -214,12 +214,19 @@ fn config_dir() -> Option<std::path::PathBuf> {
     )
 }
 
-fn themes_dir() -> Option<std::path::PathBuf> {
-    Some(config_dir()?.join("themes"))
+fn current_theme_path() -> Option<std::path::PathBuf> {
+    let home = std::env::var_os("HOME")?;
+
+    Some(
+        std::path::PathBuf::from(home)
+            .join(".config")
+            .join(format!("{}", env!("CARGO_PKG_NAME")))
+            .join("current-theme")
+    )
 }
 
-fn current_theme_path() -> Option<std::path::PathBuf> {
-    Some(config_dir()?.join("current-theme"))
+fn themes_dir() -> Option<std::path::PathBuf> {
+    Some(config_dir()?.join("themes"))
 }
 
 fn load_themes() -> Vec<Theme> {
@@ -310,11 +317,11 @@ pub fn set_current_theme(name: &str) -> Result<(), Box<dyn std::error::Error>> {
         return Err(format!("theme not found: {name}").into());
     }
 
-    let config_dir = config_dir().ok_or("could not determine config directory")?;
+    let path = current_theme_path().ok_or("could not determine config directory")?;
 
-    std::fs::create_dir_all(&config_dir)?;
-
-    let path = config_dir.join("current-theme");
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
 
     std::fs::write(path, format!("{name}\n"))?;
 
