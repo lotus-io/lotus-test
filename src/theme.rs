@@ -5,6 +5,8 @@ use serde::{Deserialize, Deserializer};
 pub struct Theme {
     pub name: String,
     pub author: String,
+    #[serde(default)]
+    pub description: String,
     pub colors: ThemeColors,
 }
 
@@ -118,6 +120,7 @@ impl Theme {
         Self {
             name: env!("CARGO_PKG_NAME").to_string(),
             author: env!("CARGO_PKG_AUTHORS").to_string(),
+            description: "Built-in fallback theme.".to_string(),
             colors: ThemeColors {
                 // Base
                 text: Color::White,

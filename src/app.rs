@@ -164,19 +164,11 @@ fn draw_home(frame: &mut Frame, app: &mut App) {
     let vertical = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),
             Constraint::Fill(1),
+            Constraint::Length(1),
             Constraint::Length(1),
         ])
         .split(inner_area);
-
-    let header = Paragraph::new(format!(
-        " [↑↓] Navigate  [^s] Themes  [Esc] Quit  (theme: {})",
-        theme.name
-    ))
-    .style(Style::default().fg(theme.colors.accent));
-
-    frame.render_widget(header, vertical[0]);
 
     let items = theme_color_items(&theme);
 
@@ -186,16 +178,15 @@ fn draw_home(frame: &mut Frame, app: &mut App) {
             .fg(theme.colors.text),
     );
 
-    frame.render_widget(list, vertical[1]);
+    frame.render_widget(list, vertical[0]);
 
-    let footer_text = app
-        .status
-        .clone()
-        .unwrap_or_else(|| format!("by {}", theme.author));
+    let help = Paragraph::new(format!(
+        "[↑↓] Navigate  [^s] Themes  [Esc] Quit  (theme: {})",
+        theme.name
+    ))
+    .style(Style::default().fg(theme.colors.subtle));
 
-    let footer = Paragraph::new(footer_text).style(Style::default().fg(theme.colors.muted));
-
-    frame.render_widget(footer, vertical[2]);
+    frame.render_widget(help, vertical[2]);
 
     if app.show_theme_popup {
         draw_theme_popup(frame, app, &theme, full_area);
@@ -229,7 +220,9 @@ fn draw_theme_popup(frame: &mut Frame, app: &mut App, theme: &Theme, area: Rect)
                 "  "
             };
 
-            ListItem::new(format!("{marker}{} — {}", t.name, t.author))
+            let mut lines = vec![format!("{marker}{}", t.name)];
+
+            ListItem::new(lines.join("\n"))
         })
         .collect();
 
@@ -268,6 +261,7 @@ fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
 
 fn theme_color_items(theme: &Theme) -> Vec<ListItem<'static>> {
     vec![
+        separator(),
         color_item("text", theme.colors.text),
         color_item("base", theme.colors.base),
         separator(),
@@ -309,13 +303,14 @@ fn theme_color_items(theme: &Theme) -> Vec<ListItem<'static>> {
         color_item("light_magenta", theme.colors.light_magenta),
         color_item("yellow", theme.colors.yellow),
         color_item("white", theme.colors.white),
+        separator(),
     ]
 }
 
 fn separator() -> ListItem<'static> {
-    ListItem::new("------").style(Style::default().fg(Color::DarkGray))
+    ListItem::new("------------------------").style(Style::default().fg(Color::DarkGray))
 }
 
 fn color_item(name: &'static str, color: Color) -> ListItem<'static> {
-    ListItem::new(format!("█ {name}")).style(Style::default().fg(color))
+    ListItem::new(format!("██ {name}")).style(Style::default().fg(color))
 }
