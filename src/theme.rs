@@ -5,132 +5,172 @@ use serde::{Deserialize, Deserializer};
 pub struct Theme {
     pub name: String,
     pub author: String,
+    #[serde(default)]
+    pub description: String,
     pub colors: ThemeColors,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ThemeColors {
     #[serde(deserialize_with = "deserialize_color")]
-    pub fg: Color,
-    #[serde(deserialize_with = "deserialize_color")]
-    pub bg: Color,
-    #[serde(deserialize_with = "deserialize_color")]
-    pub surface: Color,
-    #[serde(deserialize_with = "deserialize_color")]
-    pub surface_2: Color,
-    #[serde(deserialize_with = "deserialize_color")]
     pub text: Color,
+
+    #[serde(deserialize_with = "deserialize_color")]
+    pub base: Color,
+
+    #[serde(deserialize_with = "deserialize_color")]
+    pub surface_0: Color,
+
+    #[serde(deserialize_with = "deserialize_color")]
+    pub surface_1: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub muted: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub subtle: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub disabled: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub border: Color,
-    #[serde(deserialize_with = "deserialize_color")]
-    pub selection_fg: Color,
-    #[serde(deserialize_with = "deserialize_color")]
-    pub selection_bg: Color,
-    #[serde(deserialize_with = "deserialize_color")]
-    pub highlight_fg: Color,
-    #[serde(deserialize_with = "deserialize_color")]
-    pub highlight_bg: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub accent: Color,
+
+    #[serde(deserialize_with = "deserialize_color")]
+    pub accent_2: Color,
+
+    #[serde(deserialize_with = "deserialize_color")]
+    pub accent_3: Color,
+
+    #[serde(deserialize_with = "deserialize_color")]
+    pub accent_4: Color,
+
+    #[serde(deserialize_with = "deserialize_color")]
+    pub accent_5: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub success: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub warning: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub error: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub info: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub link: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub black: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub blue: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub green: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub cyan: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub red: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub magenta: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub brown: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub light_gray: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub dark_gray: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub light_blue: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub light_green: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub light_cyan: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub light_red: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub light_magenta: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub yellow: Color,
+
     #[serde(deserialize_with = "deserialize_color")]
     pub white: Color,
-    #[serde(deserialize_with = "deserialize_color")]
-    pub orange: Color,
-    #[serde(deserialize_with = "deserialize_color")]
-    pub pink: Color,
 }
 
 impl Theme {
     pub fn fallback() -> Self {
         Self {
-            name: format!("{}", env!("CARGO_PKG_NAME")).to_string(),
-            author: format!("{}", env!("CARGO_PKG_VERSION")).to_string(),
-            version: 1,
+            name: env!("CARGO_PKG_NAME").to_string(),
+            author: env!("CARGO_PKG_AUTHORS").to_string(),
+            description: "Built-in fallback theme.".to_string(),
             colors: ThemeColors {
-                // here your local theme so you can use it as a fallback
-                fg: Color::Black,
-                bg: Color::Black,
-                surface: Color::Black,
-                surface_2: Color::Black,
-                text: Color::Black,
-                muted: Color::Black,
-                subtle: Color::Black,
-                disabled: Color::Black,
-                border: Color::Black,
-                selection_fg: Color::Black,
-                selection_bg: Color::Black,
-                highlight_fg: Color::Black,
-                highlight_bg: Color::Black,
-                accent: Color::Black,
-                success: Color::Black,
-                warning: Color::Black,
-                error: Color::Black,
-                info: Color::Black,
-                link: Color::Black,
+                // Base
+                text: Color::White,
+                base: Color::Black,
+
+                // Surfaces
+                surface_0: Color::DarkGray,
+                surface_1: Color::Gray,
+
+                // Text
+                muted: Color::DarkGray,
+                subtle: Color::DarkGray,
+                disabled: Color::DarkGray,
+
+                // UI
+                border: Color::DarkGray,
+
+                // Accents
+                accent: Color::Magenta,
+                accent_2: Color::Blue,
+                accent_3: Color::Yellow,
+                accent_4: Color::Green,
+                accent_5: Color::Magenta,
+
+                // Semantic
+                success: Color::Green,
+                warning: Color::Yellow,
+                error: Color::Red,
+                info: Color::Cyan,
+
+                // Links
+                link: Color::Blue,
+
+                // ANSI palette
                 black: Color::Black,
-                blue: Color::Black,
-                green: Color::Black,
-                cyan: Color::Black,
-                red: Color::Black,
-                magenta: Color::Black,
-                brown: Color::Black,
-                light_gray: Color::Black,
-                dark_gray: Color::Black,
-                light_blue: Color::Black,
-                light_green: Color::Black,
-                light_cyan: Color::Black,
-                light_red: Color::Black,
-                light_magenta: Color::Black,
-                yellow: Color::Black,
-                white: Color::Black,
-                orange: Color::Black,
-                pink: Color::Black,
+                blue: Color::Blue,
+                green: Color::Green,
+                cyan: Color::Cyan,
+                red: Color::Red,
+                magenta: Color::Magenta,
+                brown: Color::Yellow,
+                light_gray: Color::Gray,
+                dark_gray: Color::DarkGray,
+                light_blue: Color::LightBlue,
+                light_green: Color::LightGreen,
+                light_cyan: Color::LightCyan,
+                light_red: Color::LightRed,
+                light_magenta: Color::LightMagenta,
+                yellow: Color::Yellow,
+                white: Color::White,
             },
         }
     }
@@ -167,21 +207,24 @@ fn toml_theme_parser(raw: &str) -> Result<Theme, toml::de::Error> {
 fn config_dir() -> Option<std::path::PathBuf> {
     let home = std::env::var_os("HOME")?;
 
+    Some(std::path::PathBuf::from(home).join(".config").join("lotus"))
+}
+
+fn current_theme_path() -> Option<std::path::PathBuf> {
+    let home = std::env::var_os("HOME")?;
+
     Some(
         std::path::PathBuf::from(home)
             .join(".config")
-            .join("lotus"),
+            // Here the name of your app's config file ↓
+            .join(format!("{}", env!("CARGO_PKG_NAME")))
+            .join("current-theme"),
     )
 }
 
 fn themes_dir() -> Option<std::path::PathBuf> {
     Some(config_dir()?.join("themes"))
 }
-
-fn current_theme_path() -> Option<std::path::PathBuf> {
-    Some(config_dir()?.join("current-theme"))
-}
-
 
 fn load_themes() -> Vec<Theme> {
     let Some(dir) = themes_dir() else {
@@ -194,12 +237,7 @@ fn load_themes() -> Vec<Theme> {
 
     entries
         .filter_map(Result::ok)
-        .filter(|entry| {
-            entry
-                .path()
-                .extension()
-                .is_some_and(|ext| ext == "toml")
-        })
+        .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "toml"))
         .filter_map(|entry| {
             let path = entry.path();
 
@@ -207,18 +245,12 @@ fn load_themes() -> Vec<Theme> {
                 Ok(raw) => match toml_theme_parser(&raw) {
                     Ok(theme) => Some(theme),
                     Err(err) => {
-                        eprintln!(
-                            "Failed to parse theme {}: {err}",
-                            path.display()
-                        );
+                        eprintln!("Failed to parse theme {}: {err}", path.display());
                         None
                     }
                 },
                 Err(err) => {
-                    eprintln!(
-                        "Failed to read theme {}: {err}",
-                        path.display()
-                    );
+                    eprintln!("Failed to read theme {}: {err}", path.display());
                     None
                 }
             }
@@ -238,6 +270,7 @@ pub fn discover_themes() -> Vec<Theme> {
     themes
 }
 
+#[allow(dead_code)]
 pub fn list_themes() {
     let themes = discover_themes();
 
@@ -246,21 +279,16 @@ pub fn list_themes() {
     }
 }
 
+#[allow(dead_code)]
 pub fn get_current_theme() -> Theme {
     let themes = discover_themes();
 
     let Some(path) = current_theme_path() else {
-        return themes
-            .first()
-            .cloned()
-            .unwrap_or_else(Theme::fallback);
+        return themes.first().cloned().unwrap_or_else(Theme::fallback);
     };
 
     let Ok(name) = std::fs::read_to_string(&path) else {
-        return themes
-            .first()
-            .cloned()
-            .unwrap_or_else(Theme::fallback);
+        return themes.first().cloned().unwrap_or_else(Theme::fallback);
     };
 
     let name = name.trim();
@@ -286,12 +314,11 @@ pub fn set_current_theme(name: &str) -> Result<(), Box<dyn std::error::Error>> {
         return Err(format!("theme not found: {name}").into());
     }
 
-    let config_dir = config_dir()
-        .ok_or("could not determine config directory")?;
+    let path = current_theme_path().ok_or("could not determine config directory")?;
 
-    std::fs::create_dir_all(&config_dir)?;
-
-    let path = config_dir.join("current-theme");
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
 
     std::fs::write(path, format!("{name}\n"))?;
 
