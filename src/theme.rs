@@ -25,9 +25,6 @@ pub struct ThemeColors {
     pub surface_1: Color,
 
     #[serde(deserialize_with = "deserialize_color")]
-    pub muted: Color,
-
-    #[serde(deserialize_with = "deserialize_color")]
     pub subtle: Color,
 
     #[serde(deserialize_with = "deserialize_color")]
@@ -131,7 +128,6 @@ impl Theme {
                 surface_1: Color::Gray,
 
                 // Text
-                muted: Color::DarkGray,
                 subtle: Color::DarkGray,
                 disabled: Color::DarkGray,
 

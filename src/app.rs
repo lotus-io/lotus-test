@@ -304,7 +304,6 @@ fn theme_color_items(theme: &Theme) -> Vec<ListItem<'static>> {
         color_item("surface_0", theme.colors.surface_0),
         color_item("surface_1", theme.colors.surface_1),
         separator(),
-        color_item("muted", theme.colors.muted),
         color_item("subtle", theme.colors.subtle),
         color_item("disabled", theme.colors.disabled),
         separator(),
